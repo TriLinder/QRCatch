@@ -1,7 +1,7 @@
 from ast import arg
 from re import T
 import re
-from flask import Flask, render_template, request, send_file, redirect
+from flask import Flask, g, render_template, request, send_file, redirect
 from io import BytesIO
 import base64
 import qrcode
@@ -20,6 +20,8 @@ abc = "a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z"
 abc = abc + "," + abc.upper()
 abc = abc.split(",")
 
+lastKnownState = {} #Game state cache
+
 def register(username) :
     id = ""
 
@@ -37,8 +39,13 @@ def newGame() :
     for i in range(6) : #Generate random game id
         id = id + random.choice(abc)
     
+    game = {"created": time.time(), "players": {}, "id": id}
+
+    global lastKnownState
+
     with shelve.open("games") as s :
-        s[id] = {"created": time.time(), "players": {}, "id": id}
+        s[id] = game
+        lastKnownState[id] = game
     
     return id
 
@@ -52,6 +59,9 @@ def base64QR(data) :
     return img_str
 
 def joinGame(player, gameID) :
+
+    global lastKnownState
+
     with shelve.open("games") as s :
         game = s[gameID]
 
@@ -63,6 +73,7 @@ def joinGame(player, gameID) :
         game["players"][player["id"]] = gamePlayer
 
         s[gameID] = game
+        lastKnownState[gameID] = game
     
     with shelve.open("players") as s :
         playerInfo = s[player["id"]]
@@ -99,6 +110,7 @@ def killPlayer(killer, killed) :
 
         game["players"] = players
         g[gameID] = game
+        lastKnownState[gameID] = game
 
 #---------------------------------------#
 
@@ -140,11 +152,26 @@ def gameLeaderboardPage(id) :
     return render_template("gameLeaderboard.html", html=html, id=id, state=str(game))
 
 @app.get("/game/<id>/state")
-def gameStatePage(id) :
+def gameState(id) :
     with shelve.open("games") as s :
         game = s[id]
     
     return str(game)
+
+@app.get("/game/<id>/lastKnownState") #Avoid disk usage
+def gameStatePage(id) :
+    global lastKnownState
+    
+    try :
+        game = lastKnownState[id]
+    except KeyError :
+        print("Loading game state from disk")
+
+        game = gameState(id)
+        lastKnownState[id] = game
+    
+    return str(game)
+
 
 @app.get("/player/<playerID>") #Player scan
 def playerScanHandler(playerID) :
@@ -189,6 +216,10 @@ def newPlayerHandler() :
 
     if not len(username) in range(1, 17) :
         return render_template("newPlayer.html", error="Username cannot be empty or longer than 16 characters.")
+
+    for char in username :
+        if not char in abc :
+            return render_template("newPlayer.html", error=f"Character '{char}' not allowed.")
 
     id = register(username)
 

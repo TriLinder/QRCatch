@@ -41,7 +41,7 @@
 
             const http = new XMLHttpRequest();
 
-            http.open("GET", "/game/{{id}}/state");
+            http.open("GET", "/game/{{id}}/lastKnownState");
             http.send();
 
             http.onload = () => check(http.responseText);
