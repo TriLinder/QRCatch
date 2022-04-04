@@ -10,7 +10,7 @@ A real-life game, where your objective is to scan others player's QR Codes using
 
 #### On the server
 
-Install the required modules from `requirements.txt`, then run `main.py`.
+Clone this repository, install the required modules from `requirements.txt`, then run `main.py`.
 
 #### For every player
 
