@@ -150,9 +150,12 @@ def gameLeaderboardPage(id) :
     
     players = game["players"]
     
-    html = ""
+    playerHTML = {}
+    playerScores = []
 
     for player in players :
+        html = ""
+
         username = players[player]["username"]
 
         kills = len(players[player]["kills"])
@@ -160,7 +163,20 @@ def gameLeaderboardPage(id) :
 
         score = round(kills - (deaths/2))
 
-        html = html + f"<tr> <td>{username}</td> <td>{kills}</td> <td>{deaths}</td> <td>{score}</td> </tr>"
+        html = html + f"<td> <b>{username}</b> </td> <td>{kills}</td> <td>{deaths}</td> <td>{score}</td> </tr>"
+        
+        playerHTML[player] = html
+
+        playerScores.append(f"{score};{player}") #For sorting the list later
+
+    playerScores.sort(reverse=True)
+
+    html = ""
+
+    for playerScore in enumerate(playerScores) :
+        player = playerScore[1].split(";")[1]
+
+        html = html + f"<tr> <td>{playerScore[0]+1}.</td> {playerHTML[player]}"
 
     if len(players) == 0 :
         html = "<tr> <td>EMPTY</td> <td>0</td> <td>0</td> <td>0</td> </tr>"

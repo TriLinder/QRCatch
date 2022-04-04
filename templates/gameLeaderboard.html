@@ -6,8 +6,9 @@
 
     <body>
         <table>
-            <tr>
-                <th>Username</th>
+            <tr class="header">
+                <th>Pos.</th>
+                <th style="width: 100%;">Username</th>
                 <th>Kills</th>
                 <th>Deaths</th>
                 <th>Score</th>
@@ -22,9 +23,13 @@
 
     <style>
         table, th, td {
+          text-align: center;
           border:1px solid black;
-          width: 100%;
         }
+
+        .header {
+            background-color: gray;
+            color: white;        }
         </style>
     
     <script>
