@@ -18,6 +18,11 @@
 
         <noscript>Enable JavaScript for an optimal experience. <br><br></noscript>
     
+        <div class="error" id="error">
+            <p><b>Connection to the server has failed.</b></p>
+            <p style="color: gray;"><i>Attempting to reconnect...</i></p>
+        </div>
+
         <a href=".">Go back</a>
     </body>
 
@@ -29,14 +34,26 @@
 
         .header {
             background-color: gray;
-            color: white;        }
+            color: white;
+        }
+
+        .error {
+            background-color: black;
+            color: white;
+            padding: 1% 1% 1% 1%;
+            display: none;
+            text-align: center;
+        }
         </style>
     
     <script>
+        var pause = false
+
         function check(response) {
             var current = "{{updateID|safe}}";
 
             console.log(current == response);
+            document.getElementById("error").style.display= "none";
 
             if (current !== response) {
                 console.log("Reloading..");
@@ -49,10 +66,13 @@
 
             const http = new XMLHttpRequest();
 
-            http.open("GET", "/game/{{id}}/lastKnownStateID");
-            http.send();
-
+            http.open("GET", "/game/{{id}}/lastKnownStateID", true);
+            http.timeout = 5000;
+            
             http.onload = () => check(http.responseText);
+            http.onerror = function () { document.getElementById("error").style.display= "block";; }
+
+            http.send();
 
             setTimeout(request, 500);
         }
