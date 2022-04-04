@@ -18,7 +18,9 @@ This game uses the [Binary Eye](https://github.com/markusfisch/BinaryEye) app on
 
 Go to [http://yourServerIP:5000/](http://localhost:5000/) and click on `Register a new player`.
 
-Input your username and click on `Register`.
+Input your username and, if you want, set a background and text color for the leaderboard.
+
+Click on `Register`.
 
 <img title="" src="readme-images/playerInfo.jpg" alt="playerInfo.jpg" width="356">
 

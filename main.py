@@ -1,4 +1,6 @@
+from tkinter import Image
 from flask import Flask, render_template, request, redirect, send_file
+from PIL import ImageColor
 from io import BytesIO
 import base64
 import qrcode
@@ -24,14 +26,14 @@ def updateLastKnownState(gameID, state) : #Update the cache
 
     lastKnownState[gameID] = {"state": state, "lastUpdate": time.time(), "updateID": uuid.uuid4().hex[:16]}
 
-def register(username) :
+def register(username, color=(255,255,255), textColor=(0,0,0)) :
     id = ""
 
     for i in range(6) : #Generate random player id
         id = id + random.choice(abc)
     
     with shelve.open("players") as s :
-        s[id] = {"username": username, "id": id, "games": []}
+        s[id] = {"username": username, "id": id, "games": [], "color": color, "textColor":textColor}
     
     return id
 
@@ -66,7 +68,7 @@ def joinGame(player, gameID) :
         except KeyError :
             return "Invalid game."
 
-        gamePlayer = {"username": player["username"], "id": player["id"], "kills":[], "deaths":[]}
+        gamePlayer = {"username": player["username"], "id": player["id"], "kills":[], "deaths":[], "color": player["color"], "textColor": player["textColor"]}
 
         if player["id"] in game["players"] :
             return "You can not join the same game twice."
@@ -157,13 +159,15 @@ def gameLeaderboardPage(id) :
         html = ""
 
         username = players[player]["username"]
+        color = players[player]["color"]
+        textColor = players[player]["textColor"]
 
         kills = len(players[player]["kills"])
         deaths = len(players[player]["deaths"])
 
         score = round(kills - (deaths/2))
 
-        html = html + f"<td> <b>{username}</b> </td> <td>{kills}</td> <td>{deaths}</td> <td>{score}</td> </tr>"
+        html = html + f"<td style='background-color: rgb{color}; color: rgb{textColor};'> <b>{username}</b> </td> <td>{kills}</td> <td>{deaths}</td> <td>{score}</td> </tr>"
         
         playerHTML[player] = html
 
@@ -179,7 +183,7 @@ def gameLeaderboardPage(id) :
         html = html + f"<tr> <td>{playerScore[0]+1}.</td> {playerHTML[player]}"
 
     if len(players) == 0 :
-        html = "<tr> <td>EMPTY</td> <td>0</td> <td>0</td> <td>0</td> </tr>"
+        html = "<tr> <td>1.</td> <td>EMPTY</td> <td>0</td> <td>0</td> <td>0</td> </tr>"
 
     return render_template("gameLeaderboard.html", html=html, id=id, state=str(game), updateID=getLastKnownStateID(id))
 
@@ -259,6 +263,15 @@ def newPlayerPage() :
 @app.post("/new")
 def newPlayerHandler() :
     username = request.form["username"].strip()
+    color = request.form["color"]
+    textColor = request.form["textColor"]
+
+    try :
+        color = ImageColor.getcolor(color, "RGB")
+        textColor = ImageColor.getcolor(textColor, "RGB")
+    except ValueError :
+        color = (255, 255, 255)
+        textColor = (0, 0, 0)
 
     if not len(username) in range(1, 17) :
         return render_template("newPlayer.html", error="Username cannot be empty or longer than 16 characters.")
@@ -270,7 +283,7 @@ def newPlayerHandler() :
             else :
                 return render_template("newPlayer.html", error=f"Character '{char}' not allowed.")
 
-    id = register(username)
+    id = register(username, color=color, textColor=textColor)
 
     qr = base64QR(f"player-{id}")
 

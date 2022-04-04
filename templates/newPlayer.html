@@ -9,9 +9,24 @@
         <p style="color: red;">{{error}}</p>
         
         <form method="POST" action="/new">
-            Your name: <input type="text" name="username" maxlength="16"> <br>
+            <table style="text-align: left;">
+
+            <tr>
+            <th>Your name:</th> <th><input type="text" name="username" maxlength="16"></th>
+            </tr>
+
+            <tr>
+                <th>Text color:</th> <th><input type="color" name="textColor" value="#000000"></th>
+            </tr>
+
+            <tr>
+            <th>Background color:</th> <th><input type="color" name="color" value="#ffffff"></th>
+            </tr>
+
+            <table>
+            
             <input type="submit" value="Register">
-        </form> <br>
+        </form> <br> <br>
         
         <a href="/">Go back</a>
     </body>
