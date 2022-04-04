@@ -120,6 +120,9 @@ def killPlayer(killer, killed) :
     
     return "Player killed."
 
+def semicolonFloat(string) : #Used for sorting on the leaderboard
+    return float(string.split(";")[0])
+
 #---------------------------------------#
 
 @app.get("/") 
@@ -165,15 +168,15 @@ def gameLeaderboardPage(id) :
         kills = len(players[player]["kills"])
         deaths = len(players[player]["deaths"])
 
-        score = round(kills - (deaths/2))
+        score = kills - (deaths/2)
 
-        html = html + f"<td style='background-color: rgb{color}; color: rgb{textColor};'> <b>{username}</b> </td> <td>{kills}</td> <td>{deaths}</td> <td>{score}</td> </tr>"
+        html = html + f"<td style='background-color: rgb{color}; color: rgb{textColor};'> <b>{username}</b> </td> <td>{kills}</td> <td>{deaths}</td> <td>{round(score)}</td> </tr>"
         
         playerHTML[player] = html
 
         playerScores.append(f"{score};{player}") #For sorting the list later
 
-    playerScores.sort(reverse=True)
+    playerScores.sort(reverse=True, key=semicolonFloat)
 
     html = ""
 
