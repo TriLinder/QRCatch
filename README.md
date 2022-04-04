@@ -2,7 +2,9 @@
 
 ## QRCatch
 
-A real-life game, where your objective is to scan others player's QR Codes using your phone. Inspired by some random Reddit comment which I couldn't find again.
+A real-life game, where your objective is to scan others player's QR Codes using your phone.
+
+Inspired by some random Reddit comment which I couldn't find again.
 
 -----
 
