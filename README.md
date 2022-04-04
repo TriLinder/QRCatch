@@ -60,4 +60,6 @@ The game is extremely simple.
 
 Scan other player's QR Codes to gain kills.
 
-Avoid getting your code scanned while scanning others, stay safe and try not to get hurt.
+Avoid getting your code scanned while scanning others
+
+Stay safe and try not to get hurt.
