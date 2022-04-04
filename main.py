@@ -137,7 +137,14 @@ def gameLeaderboardPage(id) :
 
         html = html + f"<tr> <td>{username}</td> <td>{kills}</td> <td>{deaths}</td> <td>{score}</td> </tr>"
 
-    return render_template("gameLeaderboard.html", html=html, id=id)
+    return render_template("gameLeaderboard.html", html=html, id=id, state=str(game))
+
+@app.get("/game/<id>/state")
+def gameStatePage(id) :
+    with shelve.open("games") as s :
+        game = s[id]
+    
+    return str(game)
 
 @app.get("/player/<playerID>") #Player scan
 def playerScanHandler(playerID) :

@@ -1,7 +1,6 @@
 <body>
     <head>
         <title>Leaderboard</title>
-        <meta http-equiv="refresh" content="3">
     </head>
 
     <body>
@@ -24,4 +23,32 @@
           width: 100%;
         }
         </style>
+    
+    <script>
+        function check(response) {
+            var current = "{{state|safe}}";
+
+            console.log(current == response);
+
+            if (current !== response) {
+                console.log("Reloading..");
+                window.location.reload();
+            }
+        }
+
+        function request() {
+            console.log("Checking server game state");
+
+            const http = new XMLHttpRequest();
+
+            http.open("GET", "/game/{{id}}/state");
+            http.send();
+
+            http.onload = () => check(http.responseText);
+
+            setTimeout(request, 500);
+        }
+
+        request();
+    </script>
 </body>
