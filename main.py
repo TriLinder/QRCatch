@@ -1,13 +1,11 @@
-from ast import arg
-from re import T
-import re
-from flask import Flask, g, render_template, request, send_file, redirect
+from flask import Flask, g, render_template, request, redirect
 from io import BytesIO
 import base64
 import qrcode
 import shelve
 import logging
 import random
+import uuid
 import time
 import os
 
@@ -17,10 +15,15 @@ log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 
 abc = "a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z"
-abc = abc + "," + abc.upper()
+abc = abc + "," + abc.upper() + ",0,1,2,3,4,5,6,7,8,9,?,!,.,:,-,_, "
 abc = abc.split(",")
 
 lastKnownState = {} #Game state cache
+
+def updateLastKnownState(gameID, state) : #Update the cache
+    global lastKnownState
+
+    lastKnownState[gameID] = {"state": state, "lastUpdate": time.time(), "updateID": uuid.uuid4().hex[:16]}
 
 def register(username) :
     id = ""
@@ -41,11 +44,9 @@ def newGame() :
     
     game = {"created": time.time(), "players": {}, "id": id}
 
-    global lastKnownState
-
     with shelve.open("games") as s :
         s[id] = game
-        lastKnownState[id] = game
+        updateLastKnownState(id, game)
     
     return id
 
@@ -60,10 +61,11 @@ def base64QR(data) :
 
 def joinGame(player, gameID) :
 
-    global lastKnownState
-
     with shelve.open("games") as s :
-        game = s[gameID]
+        try :
+            game = s[gameID]
+        except KeyError :
+            return "Invalid game."
 
         gamePlayer = {"username": player["username"], "id": player["id"], "kills":[], "deaths":[]}
 
@@ -73,7 +75,7 @@ def joinGame(player, gameID) :
         game["players"][player["id"]] = gamePlayer
 
         s[gameID] = game
-        lastKnownState[gameID] = game
+        updateLastKnownState(gameID, game)
     
     with shelve.open("players") as s :
         playerInfo = s[player["id"]]
@@ -110,7 +112,7 @@ def killPlayer(killer, killed) :
 
         game["players"] = players
         g[gameID] = game
-        lastKnownState[gameID] = game
+        updateLastKnownState(gameID, game)
 
 #---------------------------------------#
 
@@ -126,6 +128,9 @@ def newGamePage() :
 
 @app.get("/game/<id>/")
 def gameIndexPage(id) :
+    if not len(id) == 6 :
+        return "Invalid ID lenght."
+
     qr = base64QR(f"game-{id}")
 
     return render_template("gameIndex.html", id=id, qr=qr)
@@ -133,7 +138,11 @@ def gameIndexPage(id) :
 @app.get("/game/<id>/leaderboard")
 def gameLeaderboardPage(id) :
     with shelve.open("games") as s :
-        game = s[id]
+
+        try :
+            game = s[id]
+        except KeyError :
+            return redirect("/")
     
     players = game["players"]
     
@@ -149,28 +158,46 @@ def gameLeaderboardPage(id) :
 
         html = html + f"<tr> <td>{username}</td> <td>{kills}</td> <td>{deaths}</td> <td>{score}</td> </tr>"
 
-    return render_template("gameLeaderboard.html", html=html, id=id, state=str(game))
+    if len(players) == 0 :
+        html = "<tr> <td>EMPTY</td> <td>0</td> <td>0</td> <td>0</td> </tr>"
+
+    return render_template("gameLeaderboard.html", html=html, id=id, state=str(game), updateID=getLastKnownStateID(id))
 
 @app.get("/game/<id>/state")
 def gameState(id) :
     with shelve.open("games") as s :
         game = s[id]
     
+    updateLastKnownState(id, game)
+    
     return str(game)
 
 @app.get("/game/<id>/lastKnownState") #Avoid disk usage
-def gameStatePage(id) :
+def getLastKnownState(id) :
     global lastKnownState
     
     try :
-        game = lastKnownState[id]
-    except KeyError :
+        game = lastKnownState[id]["state"]
+    except :
         print("Loading game state from disk")
 
         game = gameState(id)
-        lastKnownState[id] = game
     
     return str(game)
+
+@app.get("/game/<id>/lastKnownStateID") #Changes on every cache update
+def getLastKnownStateID(id) :
+    global lastKnownState
+    
+    try :
+        updateID = lastKnownState[id]["updateID"]
+    except :
+        print("Loading game state from disk")
+
+        gameState(id)
+        return getLastKnownStateID(id)
+    
+    return str(updateID)
 
 
 @app.get("/player/<playerID>") #Player scan
