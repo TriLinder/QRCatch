@@ -53,7 +53,7 @@ def base64QR(data) :
     qr = qrcode.make(data)
 
     buffered = BytesIO()
-    qr.save(buffered, format="JPEG")
+    qr.save(buffered, format="JPEG", quality=100)
 
     img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
     return img_str
@@ -102,6 +102,9 @@ def killPlayer(killer, killed) :
 
     matches = list(set(gamesKiller) & set(gamesKilled))
     
+    if len(matches) == 0 :
+        return "You aren't sharing any games with this player."
+
     for gameID in matches :
         game = g[gameID]
         players = game["players"]
@@ -112,6 +115,8 @@ def killPlayer(killer, killed) :
         game["players"] = players
         g[gameID] = game
         updateLastKnownState(gameID, game)
+    
+    return "Player killed."
 
 #---------------------------------------#
 
@@ -227,10 +232,9 @@ def playerScanHandler(playerID) :
         if id == playerID :
             return "You can not hit yourself.", 200
         
-        killPlayer(playerID, id)
-        return "Player killed."
+        return killPlayer(playerID, id)
 
-    return "Invalid code", 400
+    return "Invalid QR Code", 400
 
 @app.get("/new") #New player
 def newPlayerPage() :
@@ -245,7 +249,10 @@ def newPlayerHandler() :
 
     for char in username :
         if not char in abc :
-            return render_template("newPlayer.html", error=f"Character '{char}' not allowed.")
+            if char == " " :
+                return render_template("newPlayer.html", error=f"Your username cannot contain a space.")
+            else :
+                return render_template("newPlayer.html", error=f"Character '{char}' not allowed.")
 
     id = register(username)
 
@@ -261,4 +268,4 @@ def favicon() :
         return "favicon.ico was not found", 400
 
 if __name__ == "__main__" :
-    app.run(threaded=True, host="0.0.0.0", port=5000, debug=True)
+    app.run(threaded=True, host="0.0.0.0", port=5000, debug=False)
