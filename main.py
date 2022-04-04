@@ -1,4 +1,4 @@
-from flask import Flask, g, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, send_file
 from io import BytesIO
 import base64
 import qrcode
@@ -7,7 +7,6 @@ import logging
 import random
 import uuid
 import time
-import os
 
 app = Flask(__name__)
 
@@ -253,6 +252,13 @@ def newPlayerHandler() :
     qr = base64QR(f"player-{id}")
 
     return render_template("registered.html", id=id, qr=qr)
+
+@app.get("/favicon.ico")
+def favicon() :
+    try :
+        return send_file("favicon.ico")
+    except :
+        return "favicon.ico was not found", 400
 
 if __name__ == "__main__" :
     app.run(threaded=True, host="0.0.0.0", port=5000, debug=True)
