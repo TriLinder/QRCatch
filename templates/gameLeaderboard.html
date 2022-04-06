@@ -19,7 +19,7 @@
         <noscript>Enable JavaScript for an optimal experience. <br><br></noscript>
     
         <div class="error" id="error">
-            <p><b>Connection to the server has failed.</b></p>
+            <p><b>Connection to the server has been lost.</b></p>
             <p style="color: gray;"><i>Attempting to reconnect...</i></p>
         </div>
 
@@ -39,6 +39,7 @@
 
         .error {
             background-color: black;
+            background-image: linear-gradient(to bottom right, #000000, #313131);
             color: white;
             padding: 1% 1% 1% 1%;
             display: none;
