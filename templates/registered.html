@@ -7,7 +7,16 @@
         <p>Your player ID: <b>{{id}}</b></p>
         <p>Your QR Code:</p>
 
-        <img src="data:image/jpeg;base64,{{qr}}"> <br>
+        <img src="data:image/png;base64,{{qr}}" class="qr"> <br>
         <a href="/">Go back</a>
     </body>
+
+    <style>
+
+        .qr {
+            padding-top: 10px;
+            padding-bottom: 20px;
+        }
+
+    </style>
 </body>

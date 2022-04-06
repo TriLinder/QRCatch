@@ -52,10 +52,14 @@ def newGame() :
     return id
 
 def base64QR(data) :
-    qr = qrcode.make(data)
+    qr = qrcode.QRCode(border=0)
+
+    qr.add_data(data)
+    qr.make(fit=True)
+    qr = qr.make_image()
 
     buffered = BytesIO()
-    qr.save(buffered, format="JPEG", quality=100)
+    qr.save(buffered, format="PNG", quality=100)
 
     img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
     return img_str
